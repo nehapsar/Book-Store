@@ -73,22 +73,43 @@ class BookCategoryController{
              return $countArray;
     }
 
-     public function deleteCategory($categoryIdToDelete,$categoryIdToMove){
-             $this->moveBooksToOtherCategory($categoryIdToDelete,$categoryIdToMove);
-             $searchArray = ["_id" =>  new ObjectId($categoryIdToDelete)];
-             $result = $this->dbObj->deleteOne($searchArray);
-             if($result>=1) {
-                 return ["message" => "Category deleted"];
-             }
-             else{
-                 return ["message" => "Category not exist"];
-             }
-         }
+     public function deleteCategory($categoryIdToDelete, $categoryIdToMove) {
+        $categoryIdToMove =$categoryIdToMove[id];
+          $result = $this->isCategoryExist($categoryIdToDelete, $categoryIdToMove);
+            if ($result == true) {
+            $this->moveBooksToOtherCategory($categoryIdToDelete, $categoryIdToMove);
+            $searchArray = ["_id" => new ObjectId($categoryIdToDelete)];
+            $deleteResult = $this->dbObj->deleteOne($searchArray);
 
-       private function moveBooksToOtherCategory($categoryIdToDelete,$categoryIdToMove){
-        $searchArray = ["category_id"=>$categoryIdToDelete];
-        $updateArray = ['$set'=>$categoryIdToMove];
-        $result = $this->dbBookObj->updateMany($searchArray,$updateArray);
+            if ($deleteResult >= 1) {
+                return ["message" => "Category deleted"];
+            } 
+        }
+    }
+
+    private function isCategoryExist($categoryIdToDelete, $categoryIdToMove) {
+        $searchArrayToDelete = ["_id" => new ObjectId($categoryIdToDelete)];
+        $searchArrayToMove = ["_id" => new ObjectId($categoryIdToMove)];
+        $resultToDelete = $this->dbObj->findOne($searchArrayToDelete);
+        $resultToMove = $this->dbObj->findOne($searchArrayToMove);
+
+        if (!$resultToDelete) {
+            return 'Delete category does not exist';
+        }
+
+        if (!$resultToMove) {
+            return 'Move category does not exist';
+        }
+
+        return true;
+    }
+  
+    private function moveBooksToOtherCategory($categoryIdToDelete, $categoryIdToMove) {
+        $searchArray = ["category_id" => $categoryIdToDelete];
+        $updateArray = ['$set' => ["category_id" => $categoryIdToMove]];
+
+        $result = $this->dbBookObj->updateMany($searchArray, $updateArray);
         return $result;
-       }
+    }
+
 }

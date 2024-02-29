@@ -8,6 +8,7 @@ use MongoDB\BSON\ObjectId;
 class BookCategoryController{
 
   private $dbObj;
+  
   public function __construct(){
         $this->dbObj = new BookCategoryProvider();
         $this->dbBookObj = new AddBookProvider();
@@ -20,16 +21,16 @@ class BookCategoryController{
         } else {
             return ["error" => "Invalid data"];
         }
-    }
+  }
 
-    private function isValidData($data){
-        if (!isset($data['name']) || !preg_match('/^[a-zA-Z]+$/', $data['name'])) {
+  private function isValidData($data){
+      if (!isset($data['name']) || !preg_match('/^[a-zA-Z]+$/', $data['name'])) {
             return false;
         }
-        return true;
+      return true;
     }
 
-    public function updateCategory($id,$data){
+  public function updateCategory($id,$data){
         $searchArray=["_id"=>new ObjectId($id)];
         if($this->isValidData($data)){
         $updateArray = ['$set' => $data];
@@ -40,27 +41,27 @@ class BookCategoryController{
         }
     }
 
-    public function getCategory($id){
+  public function getCategory($id){
         $searchArray=["_id"=>new ObjectId($id)];
         return $this->dbObj->findOne($searchArray);
-    }
+  }
   
-    public function getAllCategory($searchArray=[],$projection=[]){
+  public function getAllCategory($searchArray=[],$projection=[]){
         $result =$this->dbObj->find($searchArray,$projection);
         return ["result"=>$result];
-    }
+  }
   
-    public function numberOfBooksInEachCategory($searchArray = [],$projection =[]){
+  public function numberOfBooksInEachCategory($searchArray = [],$projection =[]){
         $result = $this->dbObj->find($searchArray ,$projection);
-           $categoryObjId =[];
-          foreach ($result as $categoryId) {
-              $oid =$categoryId['_id']->__toString();
+        $categoryObjId =[];
+        foreach ($result as $categoryId) {
+             $oid =$categoryId['_id']->__toString();
               array_push($categoryObjId, $oid);
-          }
-       return $this->countNumberOfBooks($categoryObjId);
-    }
+        }
+   return $this->countNumberOfBooks($categoryObjId);
+  }
 
-    private function countNumberOfBooks($categoryIds){
+  private function countNumberOfBooks($categoryIds){
         $countArray = [];
         foreach ($categoryIds as $item) {
             $searchArray = ['_id'=> new ObjectId($item)];
@@ -70,46 +71,40 @@ class BookCategoryController{
             $name = $data['name'];
             $countArray["$name"] = $result;
         }
-             return $countArray;
-    }
+    return $countArray;
+  }
 
-     public function deleteCategory($categoryIdToDelete, $categoryIdToMove) {
+  public function deleteCategory($categoryIdToDelete, $categoryIdToMove) {
         $categoryIdToMove =$categoryIdToMove[id];
           $result = $this->isCategoryExist($categoryIdToDelete, $categoryIdToMove);
             if ($result == true) {
             $this->moveBooksToOtherCategory($categoryIdToDelete, $categoryIdToMove);
             $searchArray = ["_id" => new ObjectId($categoryIdToDelete)];
             $deleteResult = $this->dbObj->deleteOne($searchArray);
-
             if ($deleteResult >= 1) {
                 return ["message" => "Category deleted"];
             } 
         }
     }
 
-    private function isCategoryExist($categoryIdToDelete, $categoryIdToMove) {
+  private function isCategoryExist($categoryIdToDelete, $categoryIdToMove) {
         $searchArrayToDelete = ["_id" => new ObjectId($categoryIdToDelete)];
         $searchArrayToMove = ["_id" => new ObjectId($categoryIdToMove)];
         $resultToDelete = $this->dbObj->findOne($searchArrayToDelete);
         $resultToMove = $this->dbObj->findOne($searchArrayToMove);
-
         if (!$resultToDelete) {
             return 'Delete category does not exist';
         }
-
         if (!$resultToMove) {
             return 'Move category does not exist';
         }
-
         return true;
     }
   
     private function moveBooksToOtherCategory($categoryIdToDelete, $categoryIdToMove) {
         $searchArray = ["category_id" => $categoryIdToDelete];
         $updateArray = ['$set' => ["category_id" => $categoryIdToMove]];
-
         $result = $this->dbBookObj->updateMany($searchArray, $updateArray);
         return $result;
     }
-
 }

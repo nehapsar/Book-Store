@@ -6,6 +6,6 @@ use App\util\BaseDataProviders;
 class OrderProvider extends BaseDataProviders{
 
   protected function collection(){
-        return "order_details";
+        return "orders";
     }
 }

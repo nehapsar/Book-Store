@@ -12,6 +12,7 @@ $configuration = [
 ];
 
 $app = new App($configuration);
+$app->add(new \App\Middleware\AuthenticateAdmin());
 
 $app->post('/category', function(Request $request, Response $response ){
     $parsedBody = $request->getParsedBody();
@@ -35,13 +36,13 @@ $app->get('/category/{id}', function (Request $request, Response $response){
     return $response->withStatus(200)->withJson($result);
 });
 
-$app->get('/categories',function (Request $request,Response $response){
+$app->get('/category',function (Request $request,Response $response){
     $getAllCategory = new BookCategoryController();
-    $result = $getAllCategory->getAllCategory();
+    $result = $getAllCategory->getCategoryList();
     return $response->withStatus(200)->withJson($result);
 });
 
-$app->get('/category' ,function (Request $request,Response $response){
+$app->get('/categories' ,function (Request $request,Response $response){
     $categoryCount = new BookCategoryController();
     $result = $categoryCount->numberOfBooksInEachCategory();
     return $response->withStatus(200)->withJson($result);
@@ -49,11 +50,11 @@ $app->get('/category' ,function (Request $request,Response $response){
 
 $app->delete('/category/{id}',function (Request $request,Response $response){
     $id = $request->getAttribute('id');
-        $data = $request->getParsedBody();
+    $data = $request->getParsedBody();
     $categoryController = new BookCategoryController();
     $result = $categoryController->deleteCategory($id,$data);
     return $response->withStatus(200)->withJson($result);
-
 });
 
 $app->run();
+
